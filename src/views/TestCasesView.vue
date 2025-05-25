@@ -1,5 +1,18 @@
 <template>
   <v-container fluid class="pa-6">
+    <!-- Error Alert -->
+    <v-alert
+      v-if="store.error"
+      type="error"
+      variant="tonal"
+      class="mb-6"
+      closable
+      @click:close="store.error = null"
+    >
+      <v-icon start>mdi-alert-circle</v-icon>
+      {{ store.error }}
+    </v-alert>
+
     <!-- Header Section -->
     <div class="d-flex justify-space-between align-center mb-6">
       <div>
@@ -54,11 +67,26 @@
       <v-card-title class="d-flex align-center pa-6">
         <v-icon class="mr-3">mdi-clipboard-check</v-icon>
         Lista de Casos de Prueba
+        <v-spacer></v-spacer>
+        <v-btn
+          v-if="store.loading"
+          icon
+          color="primary"
+          variant="text"
+          class="ml-2"
+          disabled
+        >
+          <v-progress-circular
+            indeterminate
+            size="24"
+            width="2"
+          ></v-progress-circular>
+        </v-btn>
       </v-card-title>
       <v-divider></v-divider>
       <TestCaseList
         :testCases="testCases"
-        :loading="loading"
+        :loading="store.loading"
         @edit="openForm"
         @delete="deleteTestCase"
       />
@@ -101,18 +129,22 @@ const showForm = ref(false)
 const selectedTestCase = ref(null)
 
 const testCases = computed(() => store.testCases)
-const loading = computed(() => store.loading)
 const totalTests = computed(() => testCases.value.length)
 const passedTests = computed(() => testCases.value.filter(tc => tc.test_status === true).length)
 const failedTests = computed(() => testCases.value.filter(tc => tc.test_status === false).length)
 const pendingTests = computed(() => testCases.value.filter(tc => tc.test_status === null).length)
 
-onMounted(() => {
-  store.fetchTestCases()
-  userStoriesStore.fetchUserStories()
+onMounted(async () => {
+  try {
+    await store.fetchTestCases()
+    await userStoriesStore.fetchUserStories()
+  } catch (err) {
+    // El error ya está manejado en el store
+  }
 })
 
 function openForm(testCase = null) {
+  store.error = null
   selectedTestCase.value = testCase
   showForm.value = true
 }
@@ -120,20 +152,31 @@ function openForm(testCase = null) {
 function closeForm() {
   showForm.value = false
   selectedTestCase.value = null
+  store.error = null
 }
 
 async function saveTestCase(data) {
-  if (selectedTestCase.value) {
-    await store.updateTestCase(selectedTestCase.value.id, data)
-  } else {
-    await store.addTestCase(data)
+  try {
+    store.error = null
+    if (selectedTestCase.value) {
+      await store.updateTestCase(selectedTestCase.value.id, data)
+    } else {
+      await store.addTestCase(data)
+    }
+    closeForm()
+  } catch (err) {
+    // El error ya está manejado en el store
   }
-  closeForm()
 }
 
 async function deleteTestCase(testCase) {
   if (confirm('¿Eliminar este caso de prueba?')) {
-    await store.deleteTestCase(testCase.id)
+    try {
+      store.error = null
+      await store.deleteTestCase(testCase.id)
+    } catch (err) {
+      // El error ya está manejado en el store
+    }
   }
 }
 </script>

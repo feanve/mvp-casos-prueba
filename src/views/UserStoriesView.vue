@@ -9,13 +9,25 @@
       <v-btn 
         color="primary" 
         size="large"
-        @click="openForm()"
+        @click="showForm = true"
         prepend-icon="mdi-plus"
         elevation="2"
       >
         Nueva Historia
       </v-btn>
     </div>
+
+    <!-- Alertas de error -->
+    <v-alert
+      v-if="error"
+      type="error"
+      variant="tonal"
+      closable
+      class="mb-4"
+      @click:close="error = null"
+    >
+      {{ error }}
+    </v-alert>
 
     <!-- Stats Cards -->
     <v-row class="mb-6">
@@ -57,10 +69,10 @@
       </v-card-title>
       <v-divider></v-divider>
       <UserStoryList
-        :userStories="userStories"
+        :userStories="userStoriesStore.userStories"
         :loading="loading"
-        @edit="openForm"
-        @delete="deleteUserStory"
+        @edit="handleEdit"
+        @delete="handleDelete"
       />
     </v-card>
 
@@ -68,14 +80,14 @@
     <v-dialog v-model="showForm" max-width="800" persistent>
       <v-card rounded="lg">
         <v-card-title class="d-flex align-center pa-6 bg-primary text-white">
-          <v-icon class="mr-3">{{ selectedUserStory ? 'mdi-pencil' : 'mdi-plus' }}</v-icon>
-          {{ selectedUserStory ? 'Editar Historia' : 'Nueva Historia de Usuario' }}
+          <v-icon class="mr-3">{{ selectedStory ? 'mdi-pencil' : 'mdi-plus' }}</v-icon>
+          {{ selectedStory ? 'Editar Historia' : 'Nueva Historia de Usuario' }}
         </v-card-title>
         <v-card-text class="pa-6">
           <UserStoryForm
-            :userStory="selectedUserStory"
-            @save="saveUserStory"
-            @cancel="closeForm"
+            :userStory="selectedStory"
+            @save="handleSave"
+            @cancel="handleCancel"
           />
         </v-card-text>
       </v-card>
@@ -89,46 +101,100 @@ import { useUserStoriesStore } from '../store/userStories'
 import { useProjectsStore } from '../store/projects'
 import UserStoryList from '../components/UserStory/UserStoryList.vue'
 import UserStoryForm from '../components/UserStory/UserStoryForm.vue'
+import { api } from '../services/api'
 
-const store = useUserStoriesStore()
+const userStoriesStore = useUserStoriesStore()
 const projectsStore = useProjectsStore()
-const showForm = ref(false)
-const selectedUserStory = ref(null)
 
-const userStories = computed(() => store.userStories)
-const loading = computed(() => store.loading)
+const showForm = ref(false)
+const selectedStory = ref(null)
+const loading = ref(false)
+const error = ref(null)
+
+const userStories = computed(() => userStoriesStore.userStories)
 const totalStories = computed(() => userStories.value.length)
 const highPriorityStories = computed(() => userStories.value.filter(s => s.priority === 'Alta').length)
 const mediumPriorityStories = computed(() => userStories.value.filter(s => s.priority === 'Media').length)
 const lowPriorityStories = computed(() => userStories.value.filter(s => s.priority === 'Baja').length)
 
-onMounted(() => {
-  store.fetchUserStories()
-  projectsStore.fetchProjects() // Cargar proyectos para el formulario
+onMounted(async () => {
+  try {
+    loading.value = true
+    error.value = null
+    const stories = await api.getUserStories()
+    userStoriesStore.setUserStories(stories)
+  } catch (err) {
+    if (err.response) {
+      // Error de respuesta del servidor
+      switch (err.response.status) {
+        case 404:
+          error.value = 'No se encontró el endpoint de historias de usuario. Verifique la URL de la API.'
+          break
+        case 500:
+          error.value = 'Error interno del servidor. Por favor, intente más tarde.'
+          break
+        default:
+          error.value = `Error del servidor (${err.response.status}): ${err.response.data?.detail || err.message}`
+      }
+    } else if (err.request) {
+      // Error de red (no se recibió respuesta)
+      error.value = 'No se pudo conectar con el servidor. Verifique su conexión a internet y que el servidor esté funcionando.'
+    } else {
+      // Otros errores
+      error.value = `Error al cargar las historias: ${err.message}`
+    }
+  } finally {
+    loading.value = false
+  }
 })
 
-function openForm(userStory = null) {
-  selectedUserStory.value = userStory
+async function handleSave(story) {
+  try {
+    loading.value = true
+    error.value = null
+    
+    if (selectedStory.value) {
+      // Actualizar historia existente
+      await api.updateUserStory(selectedStory.value.id, story)
+    } else {
+      // Crear nueva historia
+      await api.addUserStory(story)
+    }
+    
+    // Recargar todas las historias para asegurar que la lista esté actualizada
+    const stories = await api.getUserStories()
+    userStoriesStore.setUserStories(stories)
+    
+    showForm.value = false
+    selectedStory.value = null
+  } catch (err) {
+    error.value = 'Error al guardar la historia de usuario. Por favor, intente nuevamente.'
+  } finally {
+    loading.value = false
+  }
+}
+
+async function handleDelete(id) {
+  try {
+    loading.value = true
+    error.value = null
+    await api.deleteUserStory(id)
+    userStoriesStore.deleteUserStory(id)
+  } catch (err) {
+    error.value = 'Error al eliminar la historia de usuario. Por favor, intente nuevamente.'
+  } finally {
+    loading.value = false
+  }
+}
+
+function handleEdit(story) {
+  selectedStory.value = story
   showForm.value = true
 }
 
-function closeForm() {
+function handleCancel() {
+  selectedStory.value = null
   showForm.value = false
-  selectedUserStory.value = null
-}
-
-async function saveUserStory(data) {
-  if (selectedUserStory.value) {
-    await store.updateUserStory(selectedUserStory.value.id, data)
-  } else {
-    await store.addUserStory(data)
-  }
-  closeForm()
-}
-
-async function deleteUserStory(userStory) {
-  if (confirm('¿Eliminar esta historia de usuario?')) {
-    await store.deleteUserStory(userStory.id)
-  }
+  error.value = null
 }
 </script>

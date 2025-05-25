@@ -104,11 +104,11 @@ const isEdit = computed(() => !!props.userStory)
 
 watch(() => props.userStory, (val) => {
   if (val) {
-    form.id_project = val.id_project
+    form.id_project = val.project
     form.name = val.name
     form.description = val.description
-    form.priority = val.priority
-    form.accept_criteria = val.accept_criteria
+    form.priority = val.priority.charAt(0).toUpperCase() + val.priority.slice(1)
+    form.accept_criteria = val.criteria
   } else {
     form.id_project = null
     form.name = ''
@@ -119,13 +119,18 @@ watch(() => props.userStory, (val) => {
 }, { immediate: true })
 
 function onSubmit() {
-  emit('save', { ...form })
+  const formData = {
+    ...form,
+    priority: form.priority.toLowerCase()
+  }
+  emit('save', formData)
+  
   if (!isEdit.value) {
-    form.id_project = null
     form.name = ''
     form.description = ''
     form.priority = 'Media'
     form.accept_criteria = ''
+    form.id_project = null
     formRef.value.resetValidation()
   }
 }

@@ -1,5 +1,18 @@
 <template>
   <v-container fluid class="pa-6">
+    <!-- Error Alert -->
+    <v-alert
+      v-if="error"
+      type="error"
+      variant="tonal"
+      class="mb-6"
+      closable
+      @click:close="error = null"
+    >
+      <v-icon start>mdi-alert-circle</v-icon>
+      {{ error }}
+    </v-alert>
+
     <!-- Header Section -->
     <div class="d-flex justify-space-between align-center mb-6">
       <div>
@@ -19,32 +32,16 @@
 
     <!-- Stats Cards -->
     <v-row class="mb-6">
-      <v-col cols="12" sm="6" md="3">
-        <v-card color="success" variant="tonal" class="text-center pa-4">
-          <v-icon size="40" class="mb-2">mdi-check-circle</v-icon>
-          <div class="text-h4 font-weight-bold">{{ activeProjects }}</div>
-          <div class="text-subtitle-2">Proyectos Activos</div>
-        </v-card>
-      </v-col>
-      <v-col cols="12" sm="6" md="3">
-        <v-card color="warning" variant="tonal" class="text-center pa-4">
-          <v-icon size="40" class="mb-2">mdi-pause-circle</v-icon>
-          <div class="text-h4 font-weight-bold">{{ inactiveProjects }}</div>
-          <div class="text-subtitle-2">Proyectos Inactivos</div>
-        </v-card>
-      </v-col>
-      <v-col cols="12" sm="6" md="3">
-        <v-card color="info" variant="tonal" class="text-center pa-4">
-          <v-icon size="40" class="mb-2">mdi-folder-multiple</v-icon>
-          <div class="text-h4 font-weight-bold">{{ totalProjects }}</div>
-          <div class="text-subtitle-2">Total Proyectos</div>
-        </v-card>
-      </v-col>
-      <v-col cols="12" sm="6" md="3">
-        <v-card color="primary" variant="tonal" class="text-center pa-4">
-          <v-icon size="40" class="mb-2">mdi-calendar-today</v-icon>
-          <div class="text-h4 font-weight-bold">{{ recentProjects }}</div>
-          <div class="text-subtitle-2">Recientes</div>
+      <v-col v-for="(card, i) in [
+        { icon: 'mdi-check-circle', color: 'success', value: activeProjects, label: 'Proyectos Activos' },
+        { icon: 'mdi-pause-circle', color: 'warning', value: inactiveProjects, label: 'Proyectos Inactivos' },
+        { icon: 'mdi-folder-multiple', color: 'info', value: totalProjects, label: 'Total Proyectos' },
+        { icon: 'mdi-calendar-today', color: 'primary', value: recentProjects, label: 'Recientes' }
+      ]" :key="i" cols="12" sm="6" md="3">
+        <v-card :color="card.color" variant="tonal" class="text-center pa-4">
+          <v-icon size="40" class="mb-2">{{ card.icon }}</v-icon>
+          <div class="text-h4 font-weight-bold">{{ card.value }}</div>
+          <div class="text-subtitle-2">{{ card.label }}</div>
         </v-card>
       </v-col>
     </v-row>
@@ -54,6 +51,21 @@
       <v-card-title class="d-flex align-center pa-6">
         <v-icon class="mr-3">mdi-folder-multiple</v-icon>
         Lista de Proyectos
+        <v-spacer></v-spacer>
+        <v-btn
+          v-if="loading"
+          icon
+          color="primary"
+          variant="text"
+          class="ml-2"
+          disabled
+        >
+          <v-progress-circular
+            indeterminate
+            size="24"
+            width="2"
+          ></v-progress-circular>
+        </v-btn>
       </v-card-title>
       <v-divider></v-divider>
       <ProjectList
@@ -97,6 +109,7 @@ import ProjectForm from '../components/Project/ProjectForm.vue'
 const store = useProjectsStore()
 const showForm = ref(false)
 const selectedProject = ref(null)
+const error = ref(null)
 
 const projects = computed(() => store.projects)
 const loading = computed(() => store.loading)
@@ -109,11 +122,16 @@ const recentProjects = computed(() => {
   return projects.value.filter(p => new Date(p.created_at) > oneWeekAgo).length
 })
 
-onMounted(() => {
-  store.fetchProjects()
+onMounted(async () => {
+  try {
+    await store.fetchProjects()
+  } catch (e) {
+    error.value = 'Error al cargar los proyectos. Por favor, intente nuevamente.'
+  }
 })
 
 function openForm(project = null) {
+  error.value = null
   selectedProject.value = project
   showForm.value = true
 }
@@ -121,20 +139,31 @@ function openForm(project = null) {
 function closeForm() {
   showForm.value = false
   selectedProject.value = null
+  error.value = null
 }
 
 async function saveProject(data) {
-  if (selectedProject.value) {
-    await store.updateProject(selectedProject.value.id, data)
-  } else {
-    await store.addProject(data)
+  try {
+    error.value = null
+    if (selectedProject.value) {
+      await store.updateProject(selectedProject.value.id, data)
+    } else {
+      await store.addProject(data)
+    }
+    closeForm()
+  } catch (e) {
+    error.value = 'Error al guardar el proyecto. Por favor, intente nuevamente.'
   }
-  closeForm()
 }
 
 async function deleteProject(project) {
   if (confirm('¿Eliminar este proyecto?')) {
-    await store.deleteProject(project.id)
+    try {
+      error.value = null
+      await store.deleteProject(project.id)
+    } catch (e) {
+      error.value = 'Error al eliminar el proyecto. Por favor, intente nuevamente.'
+    }
   }
 }
 </script>
