@@ -4,18 +4,47 @@
       v-model="form.name"
       label="Nombre del Proyecto"
       :rules="[v => !!v || 'Requerido']"
+      prepend-inner-icon="mdi-folder"
+      variant="outlined"
+      class="mb-4"
       required
     />
+    
     <v-switch
       v-model="form.status"
-      label="Activo"
-    />
-    <v-btn type="submit" color="primary" :disabled="!valid">
-      {{ isEdit ? 'Actualizar' : 'Crear' }}
-    </v-btn>
-    <v-btn v-if="isEdit" @click="$emit('cancel')" color="grey">
-      Cancelar
-    </v-btn>
+      label="Proyecto Activo"
+      color="success"
+      class="mb-4"
+      hide-details
+    >
+      <template #prepend>
+        <v-icon :color="form.status ? 'success' : 'grey'">
+          {{ form.status ? 'mdi-check-circle' : 'mdi-close-circle' }}
+        </v-icon>
+      </template>
+    </v-switch>
+
+    <div class="d-flex gap-3 mt-6">
+      <v-btn 
+        type="submit" 
+        color="primary" 
+        :disabled="!valid"
+        prepend-icon="mdi-content-save"
+        size="large"
+      >
+        {{ isEdit ? 'Actualizar' : 'Crear' }}
+      </v-btn>
+      <v-btn 
+        v-if="isEdit" 
+        @click="$emit('cancel')" 
+        color="grey"
+        variant="outlined"
+        prepend-icon="mdi-close"
+        size="large"
+      >
+        Cancelar
+      </v-btn>
+    </div>
   </v-form>
 </template>
 

@@ -5,7 +5,16 @@ let projects = [
 
 // Mock de historias de usuario
 let userStories = [
-  { id: 1, name: 'Login básico', description: 'Como usuario quiero iniciar sesión...', priority: 'Alta', accept_criteria: 'Debe validar usuario y contraseña', id_project: 1, created_at: new Date(), updated_at: new Date() }
+  { 
+    id: 1, 
+    name: 'Login básico', 
+    description: 'Como usuario quiero iniciar sesión...', 
+    priority: 'Alta', 
+    accept_criteria: 'Debe validar usuario y contraseña', 
+    id_project: 1, 
+    created_at: new Date(), 
+    updated_at: new Date() 
+  }
 ]
 
 // Mock de casos de prueba
