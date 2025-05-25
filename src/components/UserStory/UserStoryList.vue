@@ -18,10 +18,10 @@
       </div>
     </template>
 
-    <template #item.id_project="{ item }">
-      <v-chip color="primary" variant="tonal" size="small">
+    <template #item.project_detail="{ item }">
+      <v-chip color="primary" variant="tonal" size="small" class="text-truncate" style="max-width: 120px;">
         <v-icon start>mdi-folder</v-icon>
-        {{ projectsMap[item.id_project] || 'Sin proyecto' }}
+        {{ item.project_detail?.name || 'Sin proyecto' }}
       </v-chip>
     </template>
 
@@ -37,11 +37,25 @@
     </template>
 
     <template #item.description="{ item }">
-      <span class="text-truncate" style="max-width: 200px;">{{ item.description }}</span>
+      <v-tooltip location="top">
+        <template v-slot:activator="{ props }">
+          <span v-bind="props" class="text-truncate d-inline-block" style="max-width: 250px;">
+            {{ truncateText(item.description, 200) }}
+          </span>
+        </template>
+        <span>{{ item.description }}</span>
+      </v-tooltip>
     </template>
 
-    <template #item.accept_criteria="{ item }">
-      <span class="text-truncate" style="max-width: 200px;">{{ item.accept_criteria }}</span>
+    <template #item.criteria="{ item }">
+      <v-tooltip location="top">
+        <template v-slot:activator="{ props }">
+          <span v-bind="props" class="text-truncate d-inline-block" style="max-width: 200px;">
+            {{ truncateText(item.criteria, 200) }}
+          </span>
+        </template>
+        <span>{{ item.criteria }}</span>
+      </v-tooltip>
     </template>
 
     <template #item.actions="{ item }">
@@ -81,11 +95,11 @@ const emit = defineEmits(['edit', 'delete'])
 
 const headers = [
   { title: 'ID', key: 'id', width: '80px' },
-  { title: 'Proyecto', key: 'id_project', width: '180px' },
+  { title: 'Proyecto', key: 'project_detail', width: '120px' },
   { title: 'Nombre', key: 'name', width: '200px' },
   { title: 'Descripción', key: 'description', width: '250px' },
   { title: 'Prioridad', key: 'priority', width: '120px' },
-  { title: 'Criterios de Aceptación', key: 'accept_criteria', width: '250px' },
+  { title: 'Criterios de Aceptación', key: 'criteria', width: '200px' },
   { title: 'Acciones', key: 'actions', sortable: false, width: '120px' }
 ]
 
@@ -99,5 +113,12 @@ function priorityIcon(priority) {
   if (priority === 'Alta') return 'mdi-alert-circle'
   if (priority === 'Media') return 'mdi-alert'
   return 'mdi-check-circle'
+}
+
+// Función para truncar texto
+function truncateText(text, maxLength) {
+  if (!text) return ''
+  if (text.length <= maxLength) return text
+  return text.substring(0, maxLength) + '...'
 }
 </script>

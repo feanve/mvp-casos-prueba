@@ -1,101 +1,172 @@
-let projects = [
-  { id: 1, name: 'Proyecto Alpha', status: true, created_at: new Date(), updated_at: new Date() },
-  { id: 2, name: 'Proyecto Beta', status: false, created_at: new Date(), updated_at: new Date() }
-]
+import axios from 'axios'
 
-// Mock de historias de usuario
-let userStories = [
-  { 
-    id: 1, 
-    name: 'Login básico', 
-    description: 'Como usuario quiero iniciar sesión...', 
-    priority: 'Alta', 
-    accept_criteria: 'Debe validar usuario y contraseña', 
-    id_project: 1, 
-    created_at: new Date(), 
-    updated_at: new Date() 
-  }
-]
+const API_URL = 'http://127.0.0.1:8000/api'
 
-// Mock de casos de prueba
-let testCases = [
-  {
-    id: 1,
-    description: 'Validar login exitoso',
-    priority: 'Alta',
-    preconditions: 'Usuario registrado',
-    input_data: 'usuario: admin, contraseña: admin',
-    steps: '1. Ir a login\n2. Ingresar usuario y contraseña\n3. Click en ingresar',
-    expected_result: 'Acceso concedido',
-    actual_result: '',
-    test_status: null, // null: no ejecutado, true: OK, false: FAIL
-    id_us: 1,
-    created_at: new Date(),
-    updated_at: new Date()
+// Configuración de axios para mejor manejo de errores
+axios.interceptors.request.use(
+  config => {
+    return config
+  },
+  error => {
+    return Promise.reject(error)
   }
-]
+)
+
+axios.interceptors.response.use(
+  response => {
+    return response
+  },
+  error => {
+    return Promise.reject(error)
+  }
+)
 
 export const api = {
-  getProjects() {
-    return Promise.resolve([...projects])
-  },
-  addProject(project) {
-    const newProject = { ...project, id: Date.now(), created_at: new Date(), updated_at: new Date() }
-    projects.push(newProject)
-    return Promise.resolve(newProject)
-  },
-  updateProject(id, data) {
-    const idx = projects.findIndex(p => p.id === id)
-    if (idx !== -1) {
-      projects[idx] = { ...projects[idx], ...data, updated_at: new Date() }
-      return Promise.resolve(projects[idx])
+  // Proyectos - Conectados a API real
+  async getProjects() {
+    try {
+      const response = await axios.get(`${API_URL}/projects/`)
+      return response.data
+    } catch (error) {
+      throw error
     }
-    return Promise.reject('No encontrado')
   },
-  deleteProject(id) {
-    projects = projects.filter(p => p.id !== id)
-    return Promise.resolve()
-  },
-  // Historias de usuario
-  getUserStories() {
-    return Promise.resolve([...userStories])
-  },
-  addUserStory(story) {
-    const newStory = { ...story, id: Date.now(), created_at: new Date(), updated_at: new Date() }
-    userStories.push(newStory)
-    return Promise.resolve(newStory)
-  },
-  updateUserStory(id, data) {
-    const idx = userStories.findIndex(s => s.id === id)
-    if (idx !== -1) {
-      userStories[idx] = { ...userStories[idx], ...data, updated_at: new Date() }
-      return Promise.resolve(userStories[idx])
+
+  async addProject(project) {
+    try {
+      const response = await axios.post(`${API_URL}/projects/`, project)
+      return response.data
+    } catch (error) {
+      throw error
     }
-    return Promise.reject('No encontrado')
   },
-  deleteUserStory(id) {
-    userStories = userStories.filter(s => s.id !== id)
-    return Promise.resolve()
-  },
-  // Casos de prueba
-  getTestCases() {
-    return Promise.resolve([...testCases])
-  },
-  addTestCase(testCase) {
-    const newTestCase = { ...testCase, id: Date.now(), created_at: new Date(), updated_at: new Date() }
-    testCases.push(newTestCase)
-    return Promise.resolve(newTestCase)
-  },
-  updateTestCase(id, data) {
-    const idx = testCases.findIndex(tc => tc.id === id)
-    if (idx !== -1) {
-      testCases[idx] = { ...testCases[idx], ...data, updated_at: new Date() }
-      return Promise.resolve(testCases[idx])
+
+  async updateProject(id, data) {
+    try {
+      const response = await axios.put(`${API_URL}/projects/${id}/`, data)
+      return response.data
+    } catch (error) {
+      throw error
     }
-    return Promise.reject('No encontrado')
   },
-  deleteTestCase(id) {
-    testCases = testCases.filter(tc => tc.id !== id)
-    return Promise.resolve()
+
+  async deleteProject(id) {
+    try {
+      await axios.delete(`${API_URL}/projects/${id}/`)
+    } catch (error) {
+      throw error
+    }
+  },
+
+  // Historias de usuario - Conectadas a API real
+  async getUserStories() {
+    try {
+      const response = await axios.get(`${API_URL}/histories/`)
+      return response.data
+    } catch (error) {
+      throw error
+    }
+  },
+
+  async addUserStory(story) {
+    try {
+      // Transformamos los datos para que coincidan con la API
+      const data = {
+        project: story.id_project,
+        name: story.name,
+        description: story.description,
+        priority: story.priority.toLowerCase(),
+        criteria: story.accept_criteria
+      }
+      const response = await axios.post(`${API_URL}/histories/`, data)
+      return response.data
+    } catch (error) {
+      throw error
+    }
+  },
+
+  async updateUserStory(id, story) {
+    try {
+      // Transformamos los datos para que coincidan con la API
+      const data = {
+        project: story.id_project,
+        name: story.name,
+        description: story.description,
+        priority: story.priority.toLowerCase(),
+        criteria: story.accept_criteria
+      }
+      const response = await axios.put(`${API_URL}/histories/${id}/`, data)
+      return response.data
+    } catch (error) {
+      throw error
+    }
+  },
+
+  async deleteUserStory(id) {
+    try {
+      await axios.delete(`${API_URL}/histories/${id}/`)
+    } catch (error) {
+      throw error
+    }
+  },
+
+  // Casos de prueba - Conectados a API real
+  async getTestCases() {
+    try {
+      const response = await axios.get(`${API_URL}/test_cases/`)
+      return response.data
+    } catch (error) {
+      throw error
+    }
+  },
+
+  async addTestCase(testCase) {
+    try {
+      // Transformamos los datos para que coincidan con la API
+      const data = {
+        description: testCase.description,
+        priority: testCase.priority,
+        preconditions: testCase.preconditions,
+        input_data: testCase.input_data,
+        steps: testCase.steps,
+        expected_result: testCase.expected_result,
+        actual_result: testCase.actual_result || '',
+        test_status: testCase.test_status,
+        id_us: testCase.id_us
+      }
+      const response = await axios.post(`${API_URL}/test_cases/`, data)
+      return response.data
+    } catch (error) {
+      throw error
+    }
+  },
+
+  async updateTestCase(id, testCase) {
+    try {
+      // Transformamos los datos para que coincidan con la API
+      const data = {
+        description: testCase.description,
+        priority: testCase.priority,
+        preconditions: testCase.preconditions,
+        input_data: testCase.input_data,
+        steps: testCase.steps,
+        expected_result: testCase.expected_result,
+        actual_result: testCase.actual_result || '',
+        test_status: testCase.test_status,
+        id_us: testCase.id_us
+      }
+      const response = await axios.put(`${API_URL}/test_cases/${id}/`, data)
+      return response.data
+    } catch (error) {
+      throw error
+    }
+  },
+
+  async deleteTestCase(id) {
+    try {
+      await axios.delete(`${API_URL}/test_cases/${id}/`)
+    } catch (error) {
+      throw error
+    }
   }
 }

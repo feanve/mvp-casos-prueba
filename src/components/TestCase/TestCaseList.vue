@@ -18,15 +18,30 @@
       </div>
     </template>
 
-    <template #item.id_us="{ item }">
-      <v-chip color="info" variant="tonal" size="small">
-        <v-icon start>mdi-account-group</v-icon>
-        {{ userStoriesMap[item.id_us] || 'Sin historia' }}
-      </v-chip>
+    <template #item.history_detail="{ item }">
+      <v-tooltip location="top">
+        <template v-slot:activator="{ props }">
+          <v-chip color="info" variant="tonal" size="small" v-bind="props" class="text-truncate" style="max-width: 200px;">
+            <v-icon start>mdi-account-group</v-icon>
+            {{ item.history_detail?.name || 'Sin historia' }}
+          </v-chip>
+        </template>
+        <div class="pa-2">
+          <div class="font-weight-bold mb-1">{{ item.history_detail?.name }}</div>
+          <div class="text-caption">{{ item.history_detail?.description }}</div>
+        </div>
+      </v-tooltip>
     </template>
 
     <template #item.description="{ item }">
-      <span class="text-truncate" style="max-width: 200px;">{{ item.description }}</span>
+      <v-tooltip location="top">
+        <template v-slot:activator="{ props }">
+          <span v-bind="props" class="text-truncate d-inline-block" style="max-width: 200px;">
+            {{ truncateText(item.description, 150) }}
+          </span>
+        </template>
+        <span>{{ item.description }}</span>
+      </v-tooltip>
     </template>
 
     <template #item.priority="{ item }">
@@ -41,7 +56,36 @@
     </template>
 
     <template #item.preconditions="{ item }">
-      <span class="text-truncate" style="max-width: 150px;">{{ item.preconditions || '-' }}</span>
+      <v-tooltip location="top">
+        <template v-slot:activator="{ props }">
+          <span v-bind="props" class="text-truncate d-inline-block" style="max-width: 150px;">
+            {{ truncateText(item.preconditions, 100) || '-' }}
+          </span>
+        </template>
+        <span>{{ item.preconditions || '-' }}</span>
+      </v-tooltip>
+    </template>
+
+    <template #item.steps="{ item }">
+      <v-tooltip location="top">
+        <template v-slot:activator="{ props }">
+          <span v-bind="props" class="text-truncate d-inline-block" style="max-width: 200px;">
+            {{ truncateText(item.steps, 150) }}
+          </span>
+        </template>
+        <span style="white-space: pre-line">{{ item.steps }}</span>
+      </v-tooltip>
+    </template>
+
+    <template #item.expected_result="{ item }">
+      <v-tooltip location="top">
+        <template v-slot:activator="{ props }">
+          <span v-bind="props" class="text-truncate d-inline-block" style="max-width: 200px;">
+            {{ truncateText(item.expected_result, 150) }}
+          </span>
+        </template>
+        <span>{{ item.expected_result }}</span>
+      </v-tooltip>
     </template>
 
     <template #item.test_status="{ item }">
@@ -111,13 +155,21 @@ const emit = defineEmits(['edit', 'delete'])
 
 const headers = [
   { title: 'ID', key: 'id', width: '80px' },
-  { title: 'Historia de Usuario', key: 'id_us', width: '200px' },
-  { title: 'Descripción', key: 'description', width: '250px' },
+  { title: 'Historia de Usuario', key: 'history_detail', width: '200px' },
+  { title: 'Descripción', key: 'description', width: '200px' },
   { title: 'Prioridad', key: 'priority', width: '120px' },
-  { title: 'Precondiciones', key: 'preconditions', width: '180px' },
+  { title: 'Precondiciones', key: 'preconditions', width: '150px' },
+  { title: 'Pasos', key: 'steps', width: '200px' },
+  { title: 'Resultado Esperado', key: 'expected_result', width: '200px' },
   { title: 'Estado', key: 'test_status', width: '120px' },
   { title: 'Acciones', key: 'actions', sortable: false, width: '120px' }
 ]
+
+function truncateText(text, maxLength) {
+  if (!text) return ''
+  if (text.length <= maxLength) return text
+  return text.substring(0, maxLength) + '...'
+}
 
 function priorityColor(priority) {
   if (priority === 'Alta') return 'error'
