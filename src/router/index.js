@@ -34,19 +34,32 @@ const router = createRouter({
 // Protección de rutas
 router.beforeEach((to, from, next) => {
   const auth = useAuthStore(pinia)
-  
+  // Permitir acceso libre a /login
+  if (to.path === '/login') {
+    next()
+    return
+  }
+  // Si la ruta requiere auth y no hay usuario, redirige a login
   if (to.meta.requiresAuth && !auth.user) {
     next('/login')
-  } else if (to.meta.roles && !to.meta.roles.includes(auth.user?.role)) {
-    // Si el usuario no tiene el rol requerido, redirigir según su rol
-    if (auth.user?.role === 'tester') {
-      next('/test-cases')
-    } else {
-      next('/projects')
-    }
-  } else {
-    next()
+    return
   }
+  // Si la ruta requiere roles específicos
+  if (to.meta.roles && !to.meta.roles.includes(auth.user?.role)) {
+    // Si ya estás en la ruta a la que quieres redirigir, no redirijas de nuevo
+    if (auth.user?.role === 'tester' && to.path !== '/test-cases') {
+      next('/test-cases')
+      return
+    }
+    if (auth.user?.role === 'admin' && to.path !== '/projects') {
+      next('/projects')
+      return
+    }
+    // Si ya estás en la ruta correcta, permite el acceso
+    next()
+    return
+  }
+  next()
 })
 
 export default router

@@ -45,6 +45,7 @@ const error = computed(() => store.error)
 
 async function handleLogin(credentials) {
   const ok = await store.login(credentials)
+  console.log("Respuesta en login view", ok)
   if (ok) {
     router.push('/projects')
   }

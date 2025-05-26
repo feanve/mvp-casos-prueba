@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { loginMock } from '../services/auth'
+import { login, getMe } from '../services/auth'
 
 export const useAuthStore = defineStore('auth', {
   state: () => ({
@@ -12,18 +12,24 @@ export const useAuthStore = defineStore('auth', {
       this.loading = true
       this.error = null
       try {
-        const user = await loginMock({ username, password })
-        this.user = user
+        await login({ username, password })
+        // Una vez logueado, obtén los datos del usuario
+        this.user = await getMe()
         this.loading = false
         return true
       } catch (err) {
-        this.error = err
+        this.error = 'Usuario o contraseña incorrectos'
         this.loading = false
         return false
       }
     },
+    async fetchUser() {
+      // Puedes usar esto para refrescar los datos del usuario en cualquier momento
+      this.user = await getMe()
+    },
     logout() {
       this.user = null
+      localStorage.removeItem('token')
     }
   }
 })
