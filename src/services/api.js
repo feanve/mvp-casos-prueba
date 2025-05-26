@@ -1,3 +1,5 @@
+import apiClient from './axios'
+
 let projects = [
   { id: 1, name: 'Proyecto Alpha', status: true, created_at: new Date(), updated_at: new Date() },
   { id: 2, name: 'Proyecto Beta', status: false, created_at: new Date(), updated_at: new Date() }
@@ -34,6 +36,63 @@ let testCases = [
     updated_at: new Date()
   }
 ]
+
+// PROYECTOS
+export const projectsApi = {
+  getAll() {
+    return apiClient.get('projects/').then(res => res.data)
+  },
+  get(id) {
+    return apiClient.get(`projects/${id}/`).then(res => res.data)
+  },
+  create(data) {
+    return apiClient.post('projects/', data).then(res => res.data)
+  },
+  update(id, data) {
+    return apiClient.put(`projects/${id}/`, data).then(res => res.data)
+  },
+  delete(id) {
+    return apiClient.delete(`projects/${id}/`)
+  }
+}
+
+// HISTORIAS DE USUARIO
+export const historiesApi = {
+  getAll() {
+    return apiClient.get('histories/').then(res => res.data)
+  },
+  get(id) {
+    return apiClient.get(`histories/${id}/`).then(res => res.data)
+  },
+  create(data) {
+    return apiClient.post('histories/', data).then(res => res.data)
+  },
+  update(id, data) {
+    return apiClient.put(`histories/${id}/`, data).then(res => res.data)
+  },
+  delete(id) {
+    return apiClient.delete(`histories/${id}/`)
+  }
+}
+
+// CASOS DE PRUEBA
+export const testCasesApi = {
+  getAll() {
+    return apiClient.get('test_cases/').then(res => res.data)
+  },
+  get(id) {
+    return apiClient.get(`test_cases/${id}/`).then(res => res.data)
+  },
+  create(data) {
+    return apiClient.post('test_cases/', data).then(res => res.data)
+  },
+  update(id, data) {
+    return apiClient.put(`test_cases/${id}/`, data).then(res => res.data)
+  },
+  delete(id) {
+    return apiClient.delete(`test_cases/${id}/`)
+  }
+}
 
 export const api = {
   getProjects() {

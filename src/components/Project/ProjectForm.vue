@@ -35,7 +35,6 @@
         {{ isEdit ? 'Actualizar' : 'Crear' }}
       </v-btn>
       <v-btn 
-        v-if="isEdit" 
         @click="$emit('cancel')" 
         color="grey"
         variant="outlined"

@@ -1,15 +1,12 @@
 <template>
   <v-form @submit.prevent="onSubmit" ref="formRef" v-model="valid">
     <v-select
-      v-model="form.id_project"
+      v-model="form.project"
       :items="projects"
       item-title="name"
       item-value="id"
       label="Proyecto"
       :rules="[v => !!v || 'Requerido']"
-      prepend-inner-icon="mdi-folder"
-      variant="outlined"
-      class="mb-4"
       required
     />
     
@@ -35,22 +32,22 @@
     
     <v-select
       v-model="form.priority"
-      :items="['Alta', 'Media', 'Baja']"
+      :items="[
+        { text: 'Alta', value: 'alta' },
+        { text: 'Media', value: 'media' },
+        { text: 'Baja', value: 'baja' }
+      ]"
       label="Prioridad"
       :rules="[v => !!v || 'Requerido']"
-      prepend-inner-icon="mdi-flag"
-      variant="outlined"
-      class="mb-4"
       required
+      item-title="text"
+      item-value="value"
     />
     
     <v-textarea
-      v-model="form.accept_criteria"
+      v-model="form.criteria"
       label="Criterios de Aceptación"
       :rules="[v => !!v || 'Requerido']"
-      prepend-inner-icon="mdi-check-circle"
-      variant="outlined"
-      class="mb-6"
       required
     />
 
@@ -64,8 +61,7 @@
       >
         {{ isEdit ? 'Actualizar' : 'Crear' }}
       </v-btn>
-      <v-btn 
-        v-if="isEdit" 
+      <v-btn
         @click="$emit('cancel')" 
         color="grey"
         variant="outlined"
@@ -91,11 +87,11 @@ const projectsStore = useProjectsStore()
 const projects = computed(() => projectsStore.projects.filter(p => p.status)) // Solo proyectos activos
 
 const form = reactive({
-  id_project: null,
+  project: null,
   name: '',
   description: '',
-  priority: 'Media',
-  accept_criteria: ''
+  priority: 'media',
+  criteria: ''
 })
 const valid = ref(false)
 const formRef = ref(null)
@@ -104,28 +100,28 @@ const isEdit = computed(() => !!props.userStory)
 
 watch(() => props.userStory, (val) => {
   if (val) {
-    form.id_project = val.id_project
+    form.project = val.project
     form.name = val.name
     form.description = val.description
     form.priority = val.priority
-    form.accept_criteria = val.accept_criteria
+    form.criteria = val.criteria
   } else {
-    form.id_project = null
+    form.project = null
     form.name = ''
     form.description = ''
-    form.priority = 'Media'
-    form.accept_criteria = ''
+    form.priority = 'media'
+    form.criteria = ''
   }
 }, { immediate: true })
 
 function onSubmit() {
   emit('save', { ...form })
   if (!isEdit.value) {
-    form.id_project = null
+    form.project = null
     form.name = ''
     form.description = ''
-    form.priority = 'Media'
-    form.accept_criteria = ''
+    form.priority = 'media'
+    form.criteria = ''
     formRef.value.resetValidation()
   }
 }

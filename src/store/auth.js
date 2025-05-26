@@ -15,6 +15,7 @@ export const useAuthStore = defineStore('auth', {
         await login({ username, password })
         // Una vez logueado, obtén los datos del usuario
         this.user = await getMe()
+        console.log("user", this.user)
         this.loading = false
         return true
       } catch (err) {

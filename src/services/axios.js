@@ -1,7 +1,7 @@
 import axios from 'axios'
 
 const apiClient = axios.create({
-  baseURL: 'http://localhost:8000/api/', // Cambia si tu backend está en otro puerto
+  baseURL: 'http://127.0.0.1:8000/api/',
   headers: {
     'Content-Type': 'application/json'
   }
@@ -10,7 +10,6 @@ const apiClient = axios.create({
 // Interceptor para agregar el token JWT si existe
 apiClient.interceptors.request.use(config => {
   const token = localStorage.getItem('token')
-  console.log("Token", token)
   if (token) {
     config.headers.Authorization = `Bearer ${token}`
   }

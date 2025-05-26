@@ -49,14 +49,14 @@
               <v-avatar size="24" class="me-2">
                 <v-icon size="16">mdi-account</v-icon>
               </v-avatar>
-              {{ auth.user?.name || 'Usuario' }}
+              {{ auth.user?.first_name || 'Usuario' }}
               <v-icon end>mdi-chevron-up</v-icon>
             </v-btn>
           </template>
           <v-list>
             <v-list-item>
               <v-list-item-title>{{ auth.user?.name || 'Usuario' }}</v-list-item-title>
-              <v-list-item-subtitle>{{ auth.user?.role || 'Rol' }}</v-list-item-subtitle>
+              <v-list-item-subtitle>{{ auth.user?.rol || 'Rol' }}</v-list-item-subtitle>
             </v-list-item>
             <v-divider></v-divider>
             <v-list-item @click="logout" prepend-icon="mdi-logout">
@@ -77,6 +77,7 @@ import { useDisplay } from 'vuetify'
 
 const router = useRouter()
 const auth = useAuthStore()
+console.log("auth", auth) 
 const { mobile } = useDisplay()
 const isMobile = computed(() => mobile.value)
 const drawer = ref(!mobile.value)
@@ -106,7 +107,8 @@ const allItems = [
 ]
 
 const filteredItems = computed(() => {
-  const userRole = auth.user?.role
+  const userRole = auth.user?.rol
+  console.log("userRole", userRole)
   return allItems.filter(item => item.roles.includes(userRole))
 })
 

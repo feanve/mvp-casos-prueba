@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { api } from '../services/api'
+import { historiesApi } from '../services/api'
 
 export const useUserStoriesStore = defineStore('userStories', {
   state: () => ({
@@ -10,20 +10,24 @@ export const useUserStoriesStore = defineStore('userStories', {
   actions: {
     async fetchUserStories() {
       this.loading = true
-      this.userStories = await api.getUserStories()
+      try {
+        this.userStories = await historiesApi.getAll()
+      } catch (e) {
+        this.error = e
+      }
       this.loading = false
     },
     async addUserStory(story) {
-      const newStory = await api.addUserStory(story)
+      const newStory = await historiesApi.create(story)
       this.userStories.push(newStory)
     },
     async updateUserStory(id, data) {
-      const updated = await api.updateUserStory(id, data)
+      const updated = await historiesApi.update(id, data)
       const idx = this.userStories.findIndex(s => s.id === id)
       if (idx !== -1) this.userStories[idx] = updated
     },
     async deleteUserStory(id) {
-      await api.deleteUserStory(id)
+      await historiesApi.delete(id)
       this.userStories = this.userStories.filter(s => s.id !== id)
     }
   }
